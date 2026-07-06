@@ -93,6 +93,7 @@
     paperSell: $("paper-sell"),
     gather: $("gather"),
     intelList: $("intel-list"),
+    daySummary: $("day-summary"),
     journal: $("journal"),
     nextDay: $("next-day"),
     closing: $("closing-dialog"),
@@ -130,8 +131,11 @@
       totalSold: 0,
       paperPosition: null,
       closingRound: null,
+      dayStart: null,
+      lastSummary: null,
       endingShown: false
     });
+    state.dayStart = createDaySnapshot();
     elements.ending.close();
     render();
   }
@@ -155,6 +159,38 @@
 
   function formatNumber(value) {
     return Math.round(value).toLocaleString("ja-JP");
+  }
+
+  function formatDelta(value, unit = "") {
+    const rounded = Math.round(value * 10) / 10;
+    const sign = rounded > 0 ? "+" : "";
+    return `${sign}${rounded.toLocaleString("ja-JP")}${unit}`;
+  }
+
+  function clonePaperPosition(position) {
+    return position ? { ...position } : null;
+  }
+
+  function createDaySnapshot() {
+    return {
+      day: state.day,
+      cash: state.cash,
+      inventory: state.inventory,
+      reputation: state.reputation,
+      welfare: state.welfare,
+      price: state.price,
+      paperPosition: clonePaperPosition(state.paperPosition)
+    };
+  }
+
+  function paperValue(position, price) {
+    if (!position) return 0;
+    const direction = position.side === "buy" ? 1 : -1;
+    return position.margin + (price - position.entryPrice) * position.units * direction;
+  }
+
+  function calculateAssets(snapshot) {
+    return snapshot.cash + snapshot.inventory * snapshot.price + paperValue(snapshot.paperPosition, snapshot.price);
   }
 
   function eventDirection(event) {
@@ -197,6 +233,7 @@
       character,
       targetDay,
       subject: event.type === "supply" ? "入荷" : "需要",
+      direction: displayedDirection,
       message: character.lines[displayedDirection],
       reliability: character.accuracy >= 0.85 ? "確かな筋" : character.accuracy >= 0.75 ? "見込みあり" : "眉唾もの"
     };
@@ -323,7 +360,10 @@
       day: state.day,
       text: `帳合米が満期を迎え、${result}。証拠金と差金を清算した。`
     });
-    return `帳合米を清算し、${result}になりました。`;
+    return {
+      notice: `帳合米を清算し、${result}になりました。`,
+      profit
+    };
   }
 
   let closingTimer;
@@ -411,6 +451,41 @@
     render();
   }
 
+  function createDaySummary({ resolvedDay, event, change, stood, startSnapshot, intelForEvent, settlement }) {
+    const endSnapshot = createDaySnapshot();
+    const assetsDelta = calculateAssets(endSnapshot) - calculateAssets(startSnapshot);
+    const cashDelta = endSnapshot.cash - startSnapshot.cash;
+    const inventoryDelta = endSnapshot.inventory - startSnapshot.inventory;
+    const reputationDelta = endSnapshot.reputation - startSnapshot.reputation;
+    const welfareDelta = endSnapshot.welfare - startSnapshot.welfare;
+    const expectedDirection = eventDirection(event);
+    const accurateIntel = intelForEvent.filter((intel) => intel.direction === expectedDirection);
+    const missedIntel = intelForEvent.length - accurateIntel.length;
+    const rumorLine = intelForEvent.length === 0
+      ? "この日の材料を示す噂は拾えていませんでした。"
+      : `噂は${accurateIntel.length}/${intelForEvent.length}件的中。${accurateIntel.length > 0
+        ? accurateIntel.map((intel) => intel.character.name.replace(/^[^ ]+ /, "")).join("・")
+        : "的中者なし"}${missedIntel > 0 ? `、逆目${missedIntel}件` : ""}。`;
+    const marketLine = stood
+      ? `${event.reason}。注文が片側に偏り、立用で終値は${state.price}文のまま。`
+      : `${event.reason}。火縄大引は${formatDelta(change, "文")}、終値${state.price}文。`;
+    const settlementLine = settlement
+      ? settlement.notice
+      : "帳合米の満期清算はありません。";
+
+    return {
+      day: resolvedDay,
+      title: `${resolvedDay}日目の商い`,
+      lines: [
+        marketLine,
+        rumorLine,
+        `総資産 ${formatDelta(assetsDelta, "文")} / 手元金 ${formatDelta(cashDelta, "文")} / 蔵 ${formatDelta(inventoryDelta, "俵")}`,
+        `信用 ${formatDelta(reputationDelta)} / 町の暮らし ${formatDelta(welfareDelta)}`,
+        settlementLine
+      ]
+    };
+  }
+
   function resolveClosingRound() {
     const round = state.closingRound;
     if (!round) return;
@@ -418,7 +493,10 @@
     window.clearTimeout(closingTimer);
     if (elements.closing.open) elements.closing.close();
 
+    const resolvedDay = state.day;
+    const startSnapshot = state.dayStart || createDaySnapshot();
     const { nextDay, event } = round;
+    const intelForEvent = state.gatheredIntel.filter((intel) => intel.targetDay === nextDay);
     state.previousPrice = state.price;
 
     if (event.type === "supply") {
@@ -444,7 +522,17 @@
         ? `${event.reason}。注文が片側に偏ったまま火縄が消え、立用。終値は${state.price}文に据え置かれた。`
         : `${event.reason}。火縄大引は${signed}文、終値${state.price}文で成立した。`
     });
-    const settlementNotice = settlePaperPosition();
+    const settlement = settlePaperPosition();
+    state.lastSummary = createDaySummary({
+      resolvedDay,
+      event,
+      change,
+      stood,
+      startSnapshot,
+      intelForEvent,
+      settlement
+    });
+    state.dayStart = createDaySnapshot();
 
     state.gatheredIntel = state.gatheredIntel.filter((intel) => intel.targetDay >= state.day);
     render();
@@ -455,7 +543,7 @@
       notify("大決算の日を迎えました。最後の取引ができます。");
     } else {
       notify(
-        settlementNotice ||
+        settlement?.notice ||
         (stood
           ? `${state.day}日目の朝。昨夜は立用となり、相場は据え置きです。`
           : `${state.day}日目の朝。${event.label}で相場が動きました。`)
@@ -552,6 +640,7 @@
 
     updateTradeTotals();
     renderPaperPosition();
+    renderDaySummary();
     renderIntel();
     renderJournal();
     drawChart();
@@ -619,6 +708,24 @@
         </div>
       </article>
     `).join("");
+  }
+
+  function renderDaySummary() {
+    const summary = state.lastSummary;
+    if (!summary) {
+      elements.daySummary.innerHTML = `
+        <strong>本日の商い</strong>
+        <span>火縄大引のあと、噂と損益を振り返ります。</span>
+      `;
+      return;
+    }
+
+    elements.daySummary.innerHTML = `
+      <strong>${summary.title}</strong>
+      <ul>
+        ${summary.lines.map((line) => `<li>${line}</li>`).join("")}
+      </ul>
+    `;
   }
 
   function renderJournal() {

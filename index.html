@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#20170f">
   <title>天下の台所 — 米相場試作</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260707-summary-layout">
 </head>
 <body>
   <header class="masthead">
@@ -127,6 +127,10 @@
               <h2>相場日誌</h2>
             </div>
           </header>
+          <div id="day-summary" class="day-summary" aria-live="polite">
+            <strong>本日の商い</strong>
+            <span>火縄大引のあと、噂と損益を振り返ります。</span>
+          </div>
           <ol id="journal" class="journal"></ol>
         </article>
 
@@ -184,6 +188,6 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="game.js"></script>
+  <script src="game.js?v=20260707-summary-layout"></script>
 </body>
 </html>

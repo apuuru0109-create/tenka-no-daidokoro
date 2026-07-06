@@ -39,7 +39,9 @@ const requiredDesignRules = [
   ["火縄大引", "function startClosing()"],
   ["立用の判定", "round.oneSided && !round.countered"],
   ["反対注文の刻消費", "function counterClosingOrder()"],
-  ["火縄の制限時間", "window.setTimeout(resolveClosingRound, 8000)"]
+  ["火縄の制限時間", "window.setTimeout(resolveClosingRound, 8000)"],
+  ["一日の振り返り", "function createDaySummary"],
+  ["噂の的中確認", "intel.direction === expectedDirection"]
 ];
 
 for (const [name, source] of requiredDesignRules) {
@@ -50,6 +52,14 @@ for (const [name, source] of requiredDesignRules) {
 
 if (!styles.includes("@media (min-width: 981px)") || !styles.includes("overflow: hidden;")) {
   throw new Error("デスクトップ一画面レイアウトの規則が見つかりません");
+}
+
+if (!styles.includes("@media (min-width: 981px) and (max-height: 760px)")) {
+  throw new Error("Chromeの低い表示領域向け一画面レイアウトの規則が見つかりません");
+}
+
+if (!html.includes('id="day-summary"')) {
+  throw new Error("一日の振り返り表示が見つかりません");
 }
 
 if (!styles.includes("@keyframes fuse-burn") || !html.includes('id="closing-dialog"')) {
