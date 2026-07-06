@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#20170f">
+  <title>天下の台所 — 米相場試作</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="masthead">
+    <div>
+      <p class="kicker">米相場生活シミュレーション</p>
+      <h1>天下の台所 <span>試作帳</span></h1>
+    </div>
+    <button id="help-button" class="quiet-button" type="button">遊び方</button>
+  </header>
+
+  <main>
+    <section class="status-strip" aria-label="現在の状態">
+      <div class="day-block">
+        <span>商い</span>
+        <strong><b id="day">1</b>日目</strong>
+        <small>大決済まで <b id="days-left">29</b>日</small>
+      </div>
+      <div class="status-item">
+        <span>手元金</span>
+        <strong id="cash">1,200文</strong>
+      </div>
+      <div class="status-item">
+        <span>蔵の米</span>
+        <strong id="inventory">8俵</strong>
+      </div>
+      <div class="status-item">
+        <span>店の信用</span>
+        <strong id="reputation">50</strong>
+      </div>
+      <div class="status-item welfare">
+        <span>町の暮らし</span>
+        <strong id="welfare">安らか</strong>
+      </div>
+      <div class="status-item">
+        <span>残り刻</span>
+        <strong id="actions">● ● ●</strong>
+      </div>
+    </section>
+
+    <section class="game-grid">
+      <article class="panel market-panel">
+        <header class="panel-heading">
+          <div>
+            <p class="eyebrow">堂島 米会所</p>
+            <h2>本日の米相場</h2>
+          </div>
+          <div id="trend-badge" class="trend neutral">— 0文</div>
+        </header>
+
+        <div class="quote">
+          <span>摂津並米　一俵</span>
+          <strong><b id="price">100</b><small>文</small></strong>
+        </div>
+
+        <div class="chart-wrap">
+          <canvas id="price-chart" width="700" height="230" aria-label="米価の推移"></canvas>
+        </div>
+
+        <div class="market-facts">
+          <div><span>空模様</span><b id="weather">晴れ</b></div>
+          <div><span>入荷</span><b id="supply">平常</b></div>
+          <div><span>町の需要</span><b id="demand">平常</b></div>
+        </div>
+
+        <div class="trade-box">
+          <div class="quantity-control">
+            <label for="quantity">取引する米俵</label>
+            <div>
+              <button id="minus" type="button" aria-label="数量を減らす">−</button>
+              <input id="quantity" type="number" min="1" max="20" value="1">
+              <button id="plus" type="button" aria-label="数量を増やす">＋</button>
+            </div>
+          </div>
+          <div class="trade-actions">
+            <button id="buy" class="buy-button" type="button">
+              <span>仕入れる</span>
+              <small id="buy-total">100文</small>
+            </button>
+            <button id="sell" class="sell-button" type="button">
+              <span>売り渡す</span>
+              <small id="sell-total">100文</small>
+            </button>
+          </div>
+          <p class="cost-note">一度の売買に一刻を使います。大口取引は相場と町の暮らしを動かします。</p>
+        </div>
+      </article>
+
+      <aside class="side-column">
+        <article class="panel intel-panel">
+          <header class="panel-heading">
+            <div>
+              <p class="eyebrow">足で稼ぐ</p>
+              <h2>町の声</h2>
+            </div>
+            <button id="gather" class="stamp-button" type="button">町を歩く <small>一刻</small></button>
+          </header>
+          <div id="intel-list" class="intel-list" aria-live="polite">
+            <div class="empty-state">
+              <span>?</span>
+              <p>町へ出て、相場の手がかりを集めましょう。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel journal-panel">
+          <header class="panel-heading">
+            <div>
+              <p class="eyebrow">番頭 お糸の記録</p>
+              <h2>相場日誌</h2>
+            </div>
+          </header>
+          <ol id="journal" class="journal"></ol>
+        </article>
+
+        <button id="next-day" class="close-day" type="button">
+          <span>店じまい</span>
+          <small>翌朝まで相場を進める</small>
+        </button>
+      </aside>
+    </section>
+  </main>
+
+  <dialog id="help-dialog">
+    <button class="dialog-close" type="button" aria-label="閉じる">×</button>
+    <p class="eyebrow">はじめての商い</p>
+    <h2>噂を読み、米を動かす</h2>
+    <ol>
+      <li><b>町を歩く</b>と一刻を使い、明日以降の手がかりを得ます。</li>
+      <li>値上がりを予想したら<b>仕入れ</b>、値下がりを予想したら在庫を<b>売却</b>します。</li>
+      <li>情報収集と売買は、どちらも一刻を使います。どこまで調べ、いつ決断するかが勝負です。</li>
+      <li><b>店じまい</b>で翌日へ進みます。日誌で値動きの理由を確かめましょう。</li>
+      <li>30日後、資産だけでなく信用と町の暮らしから結末が決まります。</li>
+    </ol>
+    <p>噂には外れるものもあります。誰の話が何に詳しいか、覚えておくのが相場師の第一歩です。</p>
+  </dialog>
+
+  <dialog id="ending-dialog" class="ending-dialog">
+    <p class="eyebrow">三十日の決算</p>
+    <h2 id="ending-title"></h2>
+    <p id="ending-copy"></p>
+    <div id="ending-stats" class="ending-stats"></div>
+    <button id="restart" class="restart-button" type="button">もう一度、暖簾を上げる</button>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="game.js"></script>
+</body>
+</html>
