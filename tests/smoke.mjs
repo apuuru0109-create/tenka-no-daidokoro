@@ -58,6 +58,10 @@ if (!styles.includes("@media (min-width: 981px) and (max-height: 760px)")) {
   throw new Error("Chromeの低い表示領域向け一画面レイアウトの規則が見つかりません");
 }
 
+if (!styles.includes("@media (min-width: 981px) and (max-height: 620px)")) {
+  throw new Error("Chromeの超低い表示領域向け一画面レイアウトの規則が見つかりません");
+}
+
 if (!html.includes('id="day-summary"')) {
   throw new Error("一日の振り返り表示が見つかりません");
 }
