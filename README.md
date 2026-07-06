@@ -46,6 +46,7 @@ node tests/smoke.mjs
 
 - 「町を歩く」で情報を1件取得します
 - 現物市場で米俵を売買します
+- 帳合米で三日後の値上がり・値下がりを取引します
 - 「店じまい」で翌日へ進み、相場と町の状態が変化します
 - 30日終了時の資産、信用、町の暮らしで結末が決まります
 
@@ -56,3 +57,4 @@ node tests/smoke.mjs
 - [面白さレビュー基準](docs/FUN_REVIEW.md)
 - [面白さレビュー記録](docs/FUN_REVIEW_LOG.md)
 - [開発・公開手順](docs/DEVELOPMENT.md)
+- [堂島米市場の調査ノート](docs/HISTORICAL_NOTES.md)

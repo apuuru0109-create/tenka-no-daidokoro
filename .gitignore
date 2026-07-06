@@ -6,3 +6,4 @@ Thumbs.db
 # Temporary deployment output
 public/
 .tools/
+tmp/

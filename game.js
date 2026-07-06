@@ -88,6 +88,9 @@
     sellTotal: $("sell-total"),
     buy: $("buy"),
     sell: $("sell"),
+    paperStatus: $("paper-status"),
+    paperBuy: $("paper-buy"),
+    paperSell: $("paper-sell"),
     gather: $("gather"),
     intelList: $("intel-list"),
     journal: $("journal"),
@@ -118,6 +121,7 @@
       tradePressure: 0,
       totalBought: 0,
       totalSold: 0,
+      paperPosition: null,
       endingShown: false
     });
     elements.ending.close();
@@ -253,6 +257,67 @@
     render();
   }
 
+  function openPaperPosition(side) {
+    if (state.actions <= 0) {
+      notify("今日はもう商いに使える刻が残っていません。");
+      return;
+    }
+    if (state.day >= MAX_DAYS) {
+      notify("大決算の日に、新しい帳合米は建てられません。");
+      return;
+    }
+    if (state.paperPosition) {
+      notify("清算前の帳合米があります。まず満期を待ちましょう。");
+      return;
+    }
+
+    const units = 10;
+    const margin = Math.ceil(state.price * units * 0.25);
+    if (state.cash < margin) {
+      notify(`証拠金${formatNumber(margin)}文が足りません。`);
+      return;
+    }
+
+    state.cash -= margin;
+    state.actions -= 1;
+    state.paperPosition = {
+      side,
+      units,
+      margin,
+      entryPrice: state.price,
+      settleDay: Math.min(MAX_DAYS, state.day + 3)
+    };
+
+    const direction = side === "buy" ? "買建て" : "売建て";
+    state.journal.unshift({
+      day: state.day,
+      text: `帳合米を${direction}。${state.paperPosition.settleDay}日目の相場で差金清算する。`
+    });
+    notify(`帳合米を${direction}ました。証拠金${formatNumber(margin)}文を預けます。`);
+    render();
+  }
+
+  function settlePaperPosition() {
+    const position = state.paperPosition;
+    if (!position || state.day < position.settleDay) return null;
+
+    const priceDifference = state.price - position.entryPrice;
+    const direction = position.side === "buy" ? 1 : -1;
+    const profit = priceDifference * position.units * direction;
+    const payout = position.margin + profit;
+    state.cash += payout;
+    state.paperPosition = null;
+
+    const result = profit >= 0
+      ? `${formatNumber(profit)}文の益`
+      : `${formatNumber(Math.abs(profit))}文の損`;
+    state.journal.unshift({
+      day: state.day,
+      text: `帳合米が満期を迎え、${result}。証拠金と差金を清算した。`
+    });
+    return `帳合米を清算し、${result}になりました。`;
+  }
+
   function advanceDay() {
     if (state.day >= MAX_DAYS) {
       showEnding();
@@ -287,6 +352,7 @@
       day: nextDay,
       text: `${event.reason}。米価は${signed}文、${state.price}文になった。`
     });
+    const settlementNotice = settlePaperPosition();
 
     state.gatheredIntel = state.gatheredIntel.filter((intel) => intel.targetDay >= state.day);
     render();
@@ -296,7 +362,7 @@
       elements.nextDay.querySelector("small").textContent = "三十日の商いを締める";
       notify("大決算の日を迎えました。最後の取引ができます。");
     } else {
-      notify(`${state.day}日目の朝。${event.label}で相場が動きました。`);
+      notify(settlementNotice || `${state.day}日目の朝。${event.label}で相場が動きました。`);
     }
   }
 
@@ -388,6 +454,7 @@
     elements.gather.disabled = state.actions <= 0;
 
     updateTradeTotals();
+    renderPaperPosition();
     renderIntel();
     renderJournal();
     drawChart();
@@ -401,6 +468,28 @@
     elements.sellTotal.textContent = `${formatNumber(total)}文`;
     elements.buy.disabled = total > state.cash || state.actions <= 0;
     elements.sell.disabled = quantity > state.inventory || state.actions <= 0;
+  }
+
+  function renderPaperPosition() {
+    const position = state.paperPosition;
+    const units = 10;
+    const requiredMargin = Math.ceil(state.price * units * 0.25);
+
+    if (position) {
+      const side = position.side === "buy" ? "買" : "売";
+      elements.paperStatus.textContent =
+        `${side}建 ${position.entryPrice}文 → ${position.settleDay}日目清算`;
+    } else {
+      elements.paperStatus.textContent = `建玉なし・証拠金 ${formatNumber(requiredMargin)}文`;
+    }
+
+    const cannotOpen =
+      Boolean(position) ||
+      state.actions <= 0 ||
+      state.day >= MAX_DAYS ||
+      state.cash < requiredMargin;
+    elements.paperBuy.disabled = cannotOpen;
+    elements.paperSell.disabled = cannotOpen;
   }
 
   function relativeDayLabel(targetDay) {
@@ -536,6 +625,8 @@
   });
   elements.buy.addEventListener("click", () => trade("buy"));
   elements.sell.addEventListener("click", () => trade("sell"));
+  elements.paperBuy.addEventListener("click", () => openPaperPosition("buy"));
+  elements.paperSell.addEventListener("click", () => openPaperPosition("sell"));
   elements.gather.addEventListener("click", gatherIntel);
   elements.nextDay.addEventListener("click", advanceDay);
   $("help-button").addEventListener("click", () => elements.help.showModal());

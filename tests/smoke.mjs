@@ -32,7 +32,10 @@ const requiredDesignRules = [
   ["噂の対象表示", "${intel.subject}見通し"],
   ["売買不能条件", "state.actions <= 0"],
   ["噂の最新3件表示", "state.gatheredIntel.slice(0, 3)"],
-  ["日誌の最新4件表示", "state.journal.slice(0, 4)"]
+  ["日誌の最新4件表示", "state.journal.slice(0, 4)"],
+  ["帳合米の建玉", "function openPaperPosition(side)"],
+  ["帳合米の差金清算", "function settlePaperPosition()"],
+  ["帳合米の三日満期", "state.day + 3"]
 ];
 
 for (const [name, source] of requiredDesignRules) {
@@ -47,6 +50,25 @@ if (!styles.includes("@media (min-width: 981px)") || !styles.includes("overflow:
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function calculatePaperSettlement(side, entryPrice, exitPrice, units = 10) {
+  const margin = Math.ceil(entryPrice * units * 0.25);
+  const direction = side === "buy" ? 1 : -1;
+  const profit = (exitPrice - entryPrice) * units * direction;
+  return { margin, profit, payout: margin + profit };
+}
+
+const unchangedBuy = calculatePaperSettlement("buy", 100, 100);
+const risingBuy = calculatePaperSettlement("buy", 100, 110);
+const risingSell = calculatePaperSettlement("sell", 100, 110);
+const fallingSell = calculatePaperSettlement("sell", 100, 90);
+
+if (unchangedBuy.payout !== unchangedBuy.margin || unchangedBuy.profit !== 0) {
+  throw new Error("値動きなしの帳合米で証拠金が正しく返却されません");
+}
+if (risingBuy.profit !== 100 || risingSell.profit !== -100 || fallingSell.profit !== 100) {
+  throw new Error("帳合米の買建て・売建て損益が正しく鏡像になっていません");
 }
 
 for (let run = 0; run < 10000; run += 1) {

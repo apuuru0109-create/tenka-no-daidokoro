@@ -338,6 +338,62 @@ main {
   background: var(--indigo);
 }
 
+.paper-trade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.paper-copy strong,
+.paper-copy span {
+  display: block;
+}
+
+.paper-copy strong {
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
+
+.paper-copy span {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-family: "Yu Gothic", sans-serif;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paper-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.paper-actions button {
+  min-width: 88px;
+  padding: 7px 10px;
+  color: #fff;
+  background: var(--gold);
+  border: 0;
+  font-weight: 700;
+}
+
+.paper-actions button:last-child {
+  background: #716044;
+}
+
+.paper-actions small {
+  display: block;
+  font-size: 8px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
 .cost-note {
   margin: 12px 0 0;
   color: var(--ink-soft);
@@ -722,6 +778,18 @@ dialog p {
 
   .trade-actions span {
     font-size: 15px;
+  }
+
+  .paper-trade {
+    gap: 8px;
+    margin-top: 7px;
+    padding-top: 7px;
+  }
+
+  .paper-actions button {
+    min-width: 76px;
+    padding: 5px 8px;
+    font-size: 12px;
   }
 
   .cost-note {
