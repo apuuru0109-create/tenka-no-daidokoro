@@ -421,7 +421,7 @@
       return;
     }
 
-    elements.intelList.innerHTML = state.gatheredIntel.map((intel) => `
+    elements.intelList.innerHTML = state.gatheredIntel.slice(0, 3).map((intel) => `
       <article class="intel-card">
         <div class="portrait">${intel.character.mark}</div>
         <div>
@@ -436,7 +436,7 @@
   }
 
   function renderJournal() {
-    elements.journal.innerHTML = state.journal.map((entry) => `
+    elements.journal.innerHTML = state.journal.slice(0, 4).map((entry) => `
       <li><b>${entry.day}日</b><span>${entry.text}</span></li>
     `).join("");
   }
