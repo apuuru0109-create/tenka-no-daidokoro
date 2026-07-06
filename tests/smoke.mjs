@@ -35,7 +35,11 @@ const requiredDesignRules = [
   ["日誌の最新4件表示", "state.journal.slice(0, 4)"],
   ["帳合米の建玉", "function openPaperPosition(side)"],
   ["帳合米の差金清算", "function settlePaperPosition()"],
-  ["帳合米の三日満期", "state.day + 3"]
+  ["帳合米の三日満期", "state.day + 3"],
+  ["火縄大引", "function startClosing()"],
+  ["立用の判定", "round.oneSided && !round.countered"],
+  ["反対注文の刻消費", "function counterClosingOrder()"],
+  ["火縄の制限時間", "window.setTimeout(resolveClosingRound, 8000)"]
 ];
 
 for (const [name, source] of requiredDesignRules) {
@@ -46,6 +50,10 @@ for (const [name, source] of requiredDesignRules) {
 
 if (!styles.includes("@media (min-width: 981px)") || !styles.includes("overflow: hidden;")) {
   throw new Error("デスクトップ一画面レイアウトの規則が見つかりません");
+}
+
+if (!styles.includes("@keyframes fuse-burn") || !html.includes('id="closing-dialog"')) {
+  throw new Error("火縄大引の演出が見つかりません");
 }
 
 function clamp(value, min, max) {

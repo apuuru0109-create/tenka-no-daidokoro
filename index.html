@@ -131,12 +131,33 @@
         </article>
 
         <button id="next-day" class="close-day" type="button">
-          <span>店じまい</span>
-          <small>翌朝まで相場を進める</small>
+          <span>火縄大引</span>
+          <small>終値を決め、翌朝へ進む</small>
         </button>
       </aside>
     </section>
   </main>
+
+  <dialog id="closing-dialog" class="closing-dialog">
+    <div class="closing-heading">
+      <div>
+        <p class="eyebrow">堂島 米会所</p>
+        <h2>火縄を点けます</h2>
+      </div>
+      <div id="closing-signal" class="closing-signal">売買拮抗</div>
+    </div>
+    <p id="closing-copy" class="closing-copy"></p>
+    <div class="fuse-stage" aria-hidden="true">
+      <span class="fuse-knot"></span>
+      <span id="fuse-burn" class="fuse-burn"></span>
+      <span class="fuse-spark">✦</span>
+    </div>
+    <div class="closing-actions">
+      <button id="closing-counter" class="counter-order" type="button"></button>
+      <button id="closing-pass" class="pass-order" type="button">手を出さず見届ける</button>
+    </div>
+    <p id="closing-note" class="closing-note"></p>
+  </dialog>
 
   <dialog id="help-dialog">
     <button class="dialog-close" type="button" aria-label="閉じる">×</button>
@@ -147,7 +168,8 @@
       <li>値上がりを予想したら<b>仕入れ</b>、値下がりを予想したら在庫を<b>売却</b>します。</li>
       <li><b>帳合米</b>は現物を動かさず、三日後の値上がり・値下がりを予想して差額を受け取る商いです。</li>
       <li>情報収集と売買は、どちらも一刻を使います。どこまで調べ、いつ決断するかが勝負です。</li>
-      <li><b>店じまい</b>で翌日へ進みます。日誌で値動きの理由を確かめましょう。</li>
+      <li><b>火縄大引</b>でその日の終値を決めます。注文が片側へ偏ったら、残り一刻で反対注文を出せます。</li>
+      <li>反対注文がなければ<b>立用</b>となり、その日の帳合米の終値は据え置かれます。</li>
       <li>30日後、資産だけでなく信用と町の暮らしから結末が決まります。</li>
     </ol>
     <p>噂には外れるものもあります。誰の話が何に詳しいか、覚えておくのが相場師の第一歩です。</p>

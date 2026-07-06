@@ -563,6 +563,153 @@ main {
   opacity: 0.65;
 }
 
+.closing-dialog {
+  width: min(600px, 92vw);
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(248, 241, 223, 0.96), rgba(238, 228, 206, 0.98)),
+    repeating-linear-gradient(88deg, transparent 0 6px, rgba(72, 51, 25, 0.05) 7px 8px);
+}
+
+.closing-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.closing-heading h2 {
+  margin-bottom: 10px;
+}
+
+.closing-signal {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  color: #fff8e7;
+  background: #756a5e;
+  font-family: "Yu Gothic", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.closing-signal.buying {
+  background: var(--vermilion);
+}
+
+.closing-signal.selling {
+  background: var(--indigo);
+}
+
+.closing-signal.matched {
+  background: var(--green);
+}
+
+.closing-copy {
+  min-height: 58px;
+  margin: 6px 0 18px;
+}
+
+.fuse-stage {
+  position: relative;
+  height: 56px;
+  margin: 8px 4px 24px;
+}
+
+.fuse-stage::before {
+  position: absolute;
+  top: 27px;
+  right: 12px;
+  left: 12px;
+  height: 5px;
+  background: #6c5437;
+  border-radius: 4px;
+  content: "";
+  transform: rotate(-1deg);
+}
+
+.fuse-knot {
+  position: absolute;
+  top: 20px;
+  right: 6px;
+  width: 17px;
+  height: 17px;
+  background: #38291d;
+  border-radius: 50%;
+}
+
+.fuse-burn {
+  position: absolute;
+  top: 22px;
+  right: 12px;
+  left: 12px;
+  height: 15px;
+  background: var(--paper-light);
+  transform-origin: left center;
+}
+
+.fuse-burn.burning {
+  animation: fuse-burn 8s linear forwards;
+}
+
+.fuse-spark {
+  position: absolute;
+  top: 10px;
+  left: 5px;
+  color: #d54b27;
+  font-size: 31px;
+  text-shadow: 0 0 12px #e9a33e;
+}
+
+.closing-dialog[open] .fuse-spark {
+  animation: spark-travel 8s linear forwards, spark 0.25s steps(2, end) infinite;
+}
+
+.closing-actions {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 10px;
+}
+
+.closing-actions button {
+  padding: 13px 16px;
+  border: 0;
+  font-weight: 700;
+}
+
+.counter-order {
+  color: #fff;
+  background: var(--vermilion);
+}
+
+.pass-order {
+  color: var(--ink);
+  background: var(--paper-dark);
+}
+
+.closing-note {
+  min-height: 22px;
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-family: "Yu Gothic", sans-serif;
+  font-size: 11px;
+}
+
+@keyframes fuse-burn {
+  from { left: 12px; }
+  to { left: calc(100% - 12px); }
+}
+
+@keyframes spark-travel {
+  from { left: 5px; }
+  to { left: calc(100% - 30px); }
+}
+
+@keyframes spark {
+  50% {
+    opacity: 0.55;
+  }
+}
+
 dialog {
   width: min(540px, 90vw);
   padding: 35px;

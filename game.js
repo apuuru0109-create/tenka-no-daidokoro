@@ -95,6 +95,13 @@
     intelList: $("intel-list"),
     journal: $("journal"),
     nextDay: $("next-day"),
+    closing: $("closing-dialog"),
+    closingSignal: $("closing-signal"),
+    closingCopy: $("closing-copy"),
+    fuseBurn: $("fuse-burn"),
+    closingCounter: $("closing-counter"),
+    closingPass: $("closing-pass"),
+    closingNote: $("closing-note"),
     toast: $("toast"),
     help: $("help-dialog"),
     ending: $("ending-dialog")
@@ -122,6 +129,7 @@
       totalBought: 0,
       totalSold: 0,
       paperPosition: null,
+      closingRound: null,
       endingShown: false
     });
     elements.ending.close();
@@ -318,39 +326,123 @@
     return `帳合米を清算し、${result}になりました。`;
   }
 
-  function advanceDay() {
+  let closingTimer;
+
+  function calculateClosingRound() {
+    const nextDay = state.day + 1;
+    const event = state.scheduledEvents[nextDay];
+    const eventImpact = event.type === "supply"
+      ? event.delta * -7
+      : event.delta * 7;
+    const scarcityFeedback = state.price > 125 ? -4 : state.price < 78 ? 4 : 0;
+    const noise = Math.round((Math.random() - 0.5) * 6);
+    const projectedChange = Math.round(
+      eventImpact + state.tradePressure + scarcityFeedback + noise
+    );
+
+    return {
+      nextDay,
+      event,
+      projectedChange,
+      oneSided: Math.abs(projectedChange) >= 15,
+      orderSide: projectedChange > 0 ? "buy" : "sell",
+      countered: false
+    };
+  }
+
+  function startClosing() {
     if (state.day >= MAX_DAYS) {
       showEnding();
       return;
     }
 
-    const nextDay = state.day + 1;
-    const event = state.scheduledEvents[nextDay];
+    if (state.closingRound) return;
+    state.closingRound = calculateClosingRound();
+    const round = state.closingRound;
+
+    if (round.oneSided) {
+      const buying = round.orderSide === "buy";
+      elements.closingSignal.textContent = buying ? "買い一色" : "売り一色";
+      elements.closingSignal.className = `closing-signal ${buying ? "buying" : "selling"}`;
+      elements.closingCopy.textContent = buying
+        ? "買いの声ばかりが響き、売り手がいません。このまま火縄が消えれば立用です。"
+        : "売りの声ばかりが響き、買い手がいません。このまま火縄が消えれば立用です。";
+      elements.closingCounter.textContent = buying
+        ? "売り向かう（一刻）"
+        : "買い向かう（一刻）";
+      elements.closingCounter.disabled = state.actions <= 0;
+      elements.closingNote.textContent = state.actions > 0
+        ? "反対注文が一件成立すれば終値が生まれ、店の信用も上がります。"
+        : "残り刻がないため、反対注文は出せません。";
+    } else {
+      elements.closingSignal.textContent = "売買拮抗";
+      elements.closingSignal.className = "closing-signal balanced";
+      elements.closingCopy.textContent =
+        "売り手と買い手の声が交わっています。火縄が消えた瞬間の値が本日の終値です。";
+      elements.closingCounter.textContent = "反対注文は不要";
+      elements.closingCounter.disabled = true;
+      elements.closingNote.textContent = "拍子木が鳴るまで、大引の値を見届けましょう。";
+    }
+
+    elements.closing.showModal();
+    elements.fuseBurn.classList.remove("burning");
+    void elements.fuseBurn.offsetWidth;
+    elements.fuseBurn.classList.add("burning");
+    window.clearTimeout(closingTimer);
+    closingTimer = window.setTimeout(resolveClosingRound, 8000);
+  }
+
+  function counterClosingOrder() {
+    const round = state.closingRound;
+    if (!round || !round.oneSided || round.countered || state.actions <= 0) return;
+
+    state.actions -= 1;
+    state.reputation = clamp(state.reputation + 2, 0, 100);
+    round.countered = true;
+    elements.closingCounter.disabled = true;
+    elements.closingCounter.textContent = round.orderSide === "buy"
+      ? "売り注文、成立"
+      : "買い注文、成立";
+    elements.closingSignal.textContent = "値が立った";
+    elements.closingSignal.className = "closing-signal matched";
+    elements.closingCopy.textContent =
+      "あなたの反対注文に拍子木が鳴りました。火縄が消えれば、この値が終値になります。";
+    elements.closingNote.textContent = "市場をつないだ働きが会所で評判になりました。信用 +2";
+    render();
+  }
+
+  function resolveClosingRound() {
+    const round = state.closingRound;
+    if (!round) return;
+
+    window.clearTimeout(closingTimer);
+    if (elements.closing.open) elements.closing.close();
+
+    const { nextDay, event } = round;
     state.previousPrice = state.price;
 
-    let eventImpact = 0;
     if (event.type === "supply") {
-      eventImpact = event.delta * -7;
       state.todayEvent = { weather: event.weather, supply: event.delta, demand: 0 };
     } else {
-      eventImpact = event.delta * 7;
       state.todayEvent = { weather: event.weather, supply: 0, demand: event.delta };
     }
 
-    const scarcityFeedback = state.price > 125 ? -4 : state.price < 78 ? 4 : 0;
-    const noise = Math.round((Math.random() - 0.5) * 6);
-    const change = Math.round(eventImpact + state.tradePressure + scarcityFeedback + noise);
+    const stood = round.oneSided && !round.countered;
+    const change = stood ? 0 : round.projectedChange;
     state.price = clamp(state.price + change, 45, 190);
     state.priceHistory.push(state.price);
     state.tradePressure *= 0.25;
     state.day = nextDay;
     state.actions = STARTING_ACTIONS;
+    state.closingRound = null;
 
     updateTownWelfare();
     const signed = change > 0 ? `+${change}` : `${change}`;
     state.journal.unshift({
       day: nextDay,
-      text: `${event.reason}。米価は${signed}文、${state.price}文になった。`
+      text: stood
+        ? `${event.reason}。注文が片側に偏ったまま火縄が消え、立用。終値は${state.price}文に据え置かれた。`
+        : `${event.reason}。火縄大引は${signed}文、終値${state.price}文で成立した。`
     });
     const settlementNotice = settlePaperPosition();
 
@@ -362,7 +454,12 @@
       elements.nextDay.querySelector("small").textContent = "三十日の商いを締める";
       notify("大決算の日を迎えました。最後の取引ができます。");
     } else {
-      notify(settlementNotice || `${state.day}日目の朝。${event.label}で相場が動きました。`);
+      notify(
+        settlementNotice ||
+        (stood
+          ? `${state.day}日目の朝。昨夜は立用となり、相場は据え置きです。`
+          : `${state.day}日目の朝。${event.label}で相場が動きました。`)
+      );
     }
   }
 
@@ -628,7 +725,10 @@
   elements.paperBuy.addEventListener("click", () => openPaperPosition("buy"));
   elements.paperSell.addEventListener("click", () => openPaperPosition("sell"));
   elements.gather.addEventListener("click", gatherIntel);
-  elements.nextDay.addEventListener("click", advanceDay);
+  elements.nextDay.addEventListener("click", startClosing);
+  elements.closingCounter.addEventListener("click", counterClosingOrder);
+  elements.closingPass.addEventListener("click", resolveClosingRound);
+  elements.closing.addEventListener("cancel", (event) => event.preventDefault());
   $("help-button").addEventListener("click", () => elements.help.showModal());
   document.querySelector(".dialog-close").addEventListener("click", () => elements.help.close());
   $("restart").addEventListener("click", resetGame);
