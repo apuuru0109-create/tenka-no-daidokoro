@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#20170f">
   <title>天下の台所 — 米相場試作</title>
-  <link rel="stylesheet" href="styles.css?v=20260707-ultra-layout">
+  <link rel="stylesheet" href="styles.css?v=20260709-assets-guide">
 </head>
 <body>
   <header class="masthead">
@@ -26,6 +26,10 @@
       <div class="status-item">
         <span>手元金</span>
         <strong id="cash">1,200文</strong>
+      </div>
+      <div class="status-item">
+        <span>総資産</span>
+        <strong id="total-assets">2,000文</strong>
       </div>
       <div class="status-item">
         <span>蔵の米</span>
@@ -99,7 +103,12 @@
               <button id="paper-sell" type="button">売建て <small>下げを読む</small></button>
             </div>
           </div>
-          <p class="cost-note">すべての売買に一刻。帳合米は現物不要、一口10俵・証拠金25%で三日後に差金清算します。</p>
+          <div class="paper-guidance" aria-live="polite">
+            <div><span>証拠金</span><b id="paper-margin">250文必要</b></div>
+            <div><span>評価</span><b id="paper-value">±0文</b></div>
+            <div><span>満期</span><b id="paper-settle">建玉なし</b></div>
+          </div>
+          <p id="guidance-line" class="cost-note">帳合米は現物不要、一口10俵。手元金から証拠金だけを預け、損得は総資産で見ます。</p>
         </div>
       </article>
 
@@ -171,6 +180,7 @@
       <li><b>町を歩く</b>と一刻を使い、明日以降の手がかりを得ます。</li>
       <li>値上がりを予想したら<b>仕入れ</b>、値下がりを予想したら在庫を<b>売却</b>します。</li>
       <li><b>帳合米</b>は現物を動かさず、三日後の値上がり・値下がりを予想して差額を受け取る商いです。</li>
+      <li>帳合米を建てると<b>手元金</b>は証拠金ぶん減りますが、預けた証拠金と評価損益は<b>総資産</b>に残ります。</li>
       <li>情報収集と売買は、どちらも一刻を使います。どこまで調べ、いつ決断するかが勝負です。</li>
       <li><b>火縄大引</b>でその日の終値を決めます。注文が片側へ偏ったら、残り一刻で反対注文を出せます。</li>
       <li>反対注文がなければ<b>立用</b>となり、その日の帳合米の終値は据え置かれます。</li>
@@ -188,6 +198,6 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="game.js?v=20260707-ultra-layout"></script>
+  <script src="game.js?v=20260709-assets-guide"></script>
 </body>
 </html>

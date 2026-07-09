@@ -73,6 +73,7 @@
     day: $("day"),
     daysLeft: $("days-left"),
     cash: $("cash"),
+    totalAssets: $("total-assets"),
     inventory: $("inventory"),
     reputation: $("reputation"),
     welfare: $("welfare"),
@@ -89,6 +90,9 @@
     buy: $("buy"),
     sell: $("sell"),
     paperStatus: $("paper-status"),
+    paperMargin: $("paper-margin"),
+    paperValue: $("paper-value"),
+    paperSettle: $("paper-settle"),
     paperBuy: $("paper-buy"),
     paperSell: $("paper-sell"),
     gather: $("gather"),
@@ -103,6 +107,7 @@
     closingCounter: $("closing-counter"),
     closingPass: $("closing-pass"),
     closingNote: $("closing-note"),
+    guidanceLine: $("guidance-line"),
     toast: $("toast"),
     help: $("help-dialog"),
     ending: $("ending-dialog")
@@ -169,6 +174,14 @@
 
   function clonePaperPosition(position) {
     return position ? { ...position } : null;
+  }
+
+  function currentAssets() {
+    return calculateAssets(createDaySnapshot());
+  }
+
+  function currentPaperProfit(position = state.paperPosition, price = state.price) {
+    return position ? paperValue(position, price) - position.margin : 0;
   }
 
   function createDaySnapshot() {
@@ -621,6 +634,7 @@
     elements.day.textContent = state.day;
     elements.daysLeft.textContent = Math.max(0, MAX_DAYS - state.day);
     elements.cash.textContent = `${formatNumber(state.cash)}文`;
+    elements.totalAssets.textContent = `${formatNumber(currentAssets())}文`;
     elements.inventory.textContent = `${state.inventory}俵`;
     elements.reputation.textContent = Math.round(state.reputation);
     elements.welfare.textContent = welfareLabel();
@@ -663,10 +677,23 @@
 
     if (position) {
       const side = position.side === "buy" ? "買" : "売";
+      const profit = currentPaperProfit(position);
+      const daysLeft = Math.max(0, position.settleDay - state.day);
       elements.paperStatus.textContent =
         `${side}建 ${position.entryPrice}文 → ${position.settleDay}日目清算`;
+      elements.paperMargin.textContent = `${formatNumber(position.margin)}文預かり`;
+      elements.paperValue.textContent = formatDelta(profit, "文");
+      elements.paperSettle.textContent = `${position.settleDay}日目・あと${daysLeft}日`;
+      elements.guidanceLine.textContent =
+        "手元金は証拠金ぶん減っています。総資産には預けた証拠金と今の評価損益を含めてあります。";
     } else {
       elements.paperStatus.textContent = `建玉なし・証拠金 ${formatNumber(requiredMargin)}文`;
+      elements.paperMargin.textContent = `${formatNumber(requiredMargin)}文必要`;
+      elements.paperValue.textContent = "±0文";
+      elements.paperSettle.textContent = "建玉なし";
+      elements.guidanceLine.textContent = state.cash < requiredMargin
+        ? `今の相場で帳合米を建てるには証拠金 ${formatNumber(requiredMargin)}文が必要です。`
+        : "帳合米は現物不要、一口10俵。手元金から証拠金だけを預け、損得は総資産で見ます。";
     }
 
     const cannotOpen =
